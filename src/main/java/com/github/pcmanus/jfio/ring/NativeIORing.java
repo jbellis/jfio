@@ -64,14 +64,14 @@ class NativeIORing extends IORing {
     }
 
     private final MemorySegment ring;
-    private final MemorySegment fileOpenerRing;
+    private final MemorySegment fileOperationsRing;
 
-    NativeIORing(Parameters parameters) {
-        super(parameters);
+    NativeIORing(Config config) {
+        super(config);
 
         try {
-            this.ring = (MemorySegment) createRingMH.invoke(parameters.depth(), parameters.useSQPolling(), parameters.useIOPolling());
-            this.fileOpenerRing = (MemorySegment) createRingMH.invoke(1, false, false);
+            this.ring = (MemorySegment) createRingMH.invoke(config.depth(), config.useSQPolling(), config.useIOPolling());
+            this.fileOperationsRing = (MemorySegment) createRingMH.invoke(1, false, false);
         } catch (Throwable e) {
             throw new RuntimeException("Error invoking native method", e);
         }
@@ -95,7 +95,7 @@ class NativeIORing extends IORing {
     protected void destroy() {
         try {
             destroyRingMH.invoke(this.ring);
-            destroyRingMH.invoke(this.fileOpenerRing);
+            destroyRingMH.invoke(this.fileOperationsRing);
         } catch (Throwable e) {
             throw new RuntimeException("Error invoking native method", e);
         }
@@ -104,16 +104,16 @@ class NativeIORing extends IORing {
     @Override
     protected int openFileInternal(MemorySegment filePathAsSegment, boolean readOnly) {
         try {
-            return (int) openFileMH.invoke(fileOpenerRing, filePathAsSegment, readOnly, parameters.directIO());
+            return (int) openFileMH.invoke(fileOperationsRing, filePathAsSegment, readOnly, config.directIO());
         } catch (Throwable e) {
             throw new RuntimeException("Error invoking native method", e);
         }
     }
 
     @Override
-    public void closeFile(int fd) {
+    public int closeFileInternal(int fd) {
         try {
-            closeFileMH.invoke(fileOpenerRing, fd);
+            return (int) closeFileMH.invoke(fileOperationsRing, fd);
         } catch (Throwable e) {
             throw new RuntimeException("Error invoking native method", e);
         }

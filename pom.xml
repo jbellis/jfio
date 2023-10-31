@@ -210,5 +210,11 @@
       <version>1.0</version>
       <scope>provided</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.jctools</groupId>
+      <artifactId>jctools-core</artifactId>
+      <version>4.0.1</version>
+    </dependency>
   </dependencies>
 </project>

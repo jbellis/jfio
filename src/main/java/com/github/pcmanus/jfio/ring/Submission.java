@@ -4,6 +4,7 @@ import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.StructLayout;
 import java.lang.invoke.VarHandle;
+import java.util.Objects;
 
 import static com.github.pcmanus.jfio.ring.NativeUtils.ALLOCATOR;
 import static com.github.pcmanus.jfio.ring.NativeUtils.POINTER;
@@ -13,13 +14,24 @@ import static java.lang.foreign.ValueLayout.*;
  * A read or write operation to be submitted to an {@link IORing}.
  */
 public abstract class Submission {
-    final boolean isRead;
-    final int fd;
-    final int length;
-    final MemorySegment buffer;
-    final long offset;
+    protected final boolean isRead;
+    protected final int fd;
+    protected final int length;
+    protected final MemorySegment buffer;
+    protected final long offset;
 
     protected Submission(boolean isRead, int fd, int length, MemorySegment buffer, long offset) {
+        Objects.requireNonNull(buffer, "The buffer must not be null");
+        if (length < 0) {
+            throw new IllegalArgumentException("Invalid length, must be >= 0");
+        }
+        if (fd < 0) {
+            throw new IllegalArgumentException("Invalid file descriptor, must be >= 0");
+        }
+        if (offset < 0) {
+            throw new IllegalArgumentException("Invalid offset, must be >= 0");
+        }
+
         this.isRead = isRead;
         this.fd = fd;
         this.length = length;

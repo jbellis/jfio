@@ -5,20 +5,18 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.github.pcmanus.jfio.TestUtils.TEST_FILE;
+import static com.github.pcmanus.jfio.TestUtils.bufferToString;
 import static org.junit.jupiter.api.Assertions.*;
 
 class IORingTest {
-    private static final Path RESOURCES_DIR = Path.of("src", "test", "resources");
-    private static final Path TEST_FILE = RESOURCES_DIR.resolve("le_corbeau_et_le_renard.txt");
 
     @Test
     void canReadFileWithBufferedIO() throws InterruptedException, IOException {
-        try (var ring = IORing.builder(2).useDirectIO(false).build()) {
+        try (var ring = IORing.create(IORing.Config.buffered(2))) {
             int fd = ring.openFile(TEST_FILE, true);
             MemorySegment buffer = NativeUtils.ALLOCATOR.allocate(7);
             AtomicBoolean done = new AtomicBoolean();
@@ -39,17 +37,17 @@ class IORingTest {
                 Thread.sleep(10);
             }
             assertTrue(done.get());
-            assertEquals("tre Cor", Charset.defaultCharset().decode(buffer.asByteBuffer()).toString());
+            assertEquals("tre Cor", bufferToString(buffer.asByteBuffer()));
             ring.closeFile(fd);
         }
     }
 
     @Test
     void canReadFileWithDirectIO() throws IOException, InterruptedException {
-        try (var ring = IORing.builder(2).withDirectIO().build()) {
+        try (var ring = IORing.create(IORing.Config.direct(2))) {
             int fd = ring.openFile(TEST_FILE, true);
             // With direct IO, we ask for multiples of 512 bytes. So while at it, we get the whole thing.
-            MemorySegment seg = NativeUtils.ALLOCATOR.allocate(1024);
+            MemorySegment seg = NativeUtils.ALLOCATOR.allocate(1024, 512);
             AtomicBoolean done = new AtomicBoolean();
             ring.submissions.add(new Submission(true,  fd, 1024, seg, 0) {
                 @Override
@@ -70,8 +68,7 @@ class IORingTest {
             assertTrue(done.get());
             ByteBuffer buffer = seg.asByteBuffer();
             buffer.limit(699);
-            String content = Charset.defaultCharset().decode(buffer).toString();
-            assertEquals(Files.readString(TEST_FILE), content);
+            assertEquals(Files.readString(TEST_FILE), bufferToString(buffer));
             ring.closeFile(fd);
         }
     }

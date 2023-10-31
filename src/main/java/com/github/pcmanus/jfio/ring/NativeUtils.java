@@ -15,6 +15,8 @@ import static java.lang.foreign.ValueLayout.ADDRESS;
 final class NativeUtils {
     private static final Logger logger = LogManager.getLogger();
 
+    static final int EIO_ERRNO = 5;
+
     static final ValueLayout.OfAddress POINTER = ADDRESS.withBitAlignment(64).asUnbounded();
     private static final Linker LINKER = Linker.nativeLinker();
     private static final SymbolLookup LOOK_BY_NAME;

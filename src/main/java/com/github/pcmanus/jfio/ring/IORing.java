@@ -18,26 +18,26 @@ import java.nio.file.Path;
  */
 @NotThreadSafe
 public abstract class IORing implements AutoCloseable {
-    final Parameters parameters;
+    final Config config;
 
     final Submissions submissions;
     final SubmissionAndCompletionResult result;
 
     private boolean closed;
 
-    IORing(Parameters parameters) {
-        this.parameters = parameters;
-        int depth = parameters.depth;
+    IORing(Config config) {
+        this.config = config;
+        int depth = config.depth;
         this.submissions = new Submissions(depth);
         this.result = new SubmissionAndCompletionResult(submissions.maxInFlight());
     }
 
-    public static Builder builder(int depth) {
-        return new Builder(depth);
+    public static IORing create(Config config) {
+        return new NativeIORing(config);
     }
 
-    public int depth() {
-        return parameters.depth;
+    public Config config() {
+        return config;
     }
 
     /**
@@ -64,19 +64,34 @@ public abstract class IORing implements AutoCloseable {
     }
 
     /**
+     * The number of submissions that have been added to the ring (through {@link #add}) but haven't yet been
+     * successfully submitted to the underlying io_uring ring (which should happen by calling
+     * {@link #submitAndCheckCompletions()}).
+     */
+    public int pendingSubmissions() {
+        return submissions.pending();
+    }
+
+    /**
      * Adds a new submission as candidate for submission by the next call to {@link #submitAndCheckCompletions}.
      * <p>
      * The submission is only added if there is room for it (see {@link #submissionSlotsAvailable}).
      *
-     * @param submission the submission to add.
+     * @param submission the submission to add. Please note that if direct I/O is used, the submission must respect
+     *                   direct I/O constraints (namely, the buffer address, offset and length must be aligned on 512
+     *                   bytes). It not, the submission will ultimately complete with a 22 (EINVAL) error code.
      * @return whether the submission was added.
+     *
+     * @throws IllegalArgumentException if the submission is invalid for the ring configuration. Mostly, when using
+     *   direct I/O, the constraints are that the buffer address, the offset and the length must all be aligned on 512
+     *   bytes.
      */
     public boolean add(Submission submission) {
         return submissions.add(submission);
     }
 
     /**
-     * Attempts to submit (up to {@link #depth}) pending submissions, and then checks for any completions (of either
+     * Attempts to submit (up to {@code this.config().depth()}) pending submissions, and then checks for any completions (of either
      * previous or new submissions).
      * <p>
      * Any submission completed will have it's {@link Submission#onCompletion} method called by this method.
@@ -103,17 +118,33 @@ public abstract class IORing implements AutoCloseable {
         segment.setUtf8String(0, absolutePath);
         int fd = openFileInternal(segment, readOnly);
         if (fd < 0) {
-            throw new IOException(String.format("Error %d while opening fil '%s'", -fd, path));
+            int errno = -fd;
+            if (errno == NativeUtils.EIO_ERRNO) {
+                throw new IOException(String.format("Error opening file '%s': I/O error", path));
+            } else {
+                throw new RuntimeException(String.format("Unexpected error opening file '%s' (errno: %d)", path, errno));
+            }
         }
         return fd;
     }
 
-    public abstract void closeFile(int fd);
+    public void closeFile(int fd) throws IOException {
+        int res = closeFileInternal(fd);
+        if (res < 0) {
+            int errno = -res;
+            if (errno == NativeUtils.EIO_ERRNO) {
+                throw new IOException("Error closing file: I/O error");
+            } else {
+                throw new RuntimeException("Unexpected error closing file (errno: " + errno + ")");
+            }
+        }
+    }
 
     protected abstract void submitAndCheckCompletionsInternal();
     protected abstract void destroy();
 
     protected abstract int openFileInternal(MemorySegment filePathAsSegment, boolean readOnly);
+    protected abstract int closeFileInternal(int fd);
 
 
     @Override
@@ -126,65 +157,78 @@ public abstract class IORing implements AutoCloseable {
         this.destroy();
     }
 
-    public static class Builder {
-        private final int depth;
-        private boolean directIO = false;
-        private boolean useIOPolling = false;
-        private boolean useSQPolling = false;
-
-        public Builder(int depth) {
-            if (depth <= 0) {
-                throw new IllegalArgumentException("Depth must be positive");
-            }
-            this.depth = depth;
-        }
-
-        public Builder withDirectIO() {
-            this.directIO = true;
-            return this;
-        }
-
-        public Builder useDirectIO(boolean useDirectIO) {
-            this.directIO = useDirectIO;
-            return this;
-        }
-
-        public Builder withIOPolling() {
-            this.useIOPolling = true;
-            return this;
-        }
-
-        public Builder useIOPolling(boolean useIOPolling) {
-            this.useIOPolling = useIOPolling;
-            return this;
-        }
-
-        public Builder withSQPolling() {
-            this.useSQPolling = true;
-            return this;
-        }
-
-        public Builder useSQPolling(boolean useSQPolling) {
-            this.useSQPolling = useSQPolling;
-            return this;
-        }
-
-        private void validateParameters() {
-            if (useIOPolling && !directIO) {
-                throw new IllegalArgumentException("I/O polling can only be used with direct I/O");
-            }
-        }
-
-        public IORing build() {
-            validateParameters();
-            return new NativeIORing(new Parameters(depth, directIO, useSQPolling, useIOPolling));
-        }
-    }
-
-    protected record Parameters(
+    public record Config(
             int depth,
             boolean directIO,
             boolean useSQPolling,
             boolean useIOPolling
-    ) {}
+    ) {
+        public static Config buffered(int depth) {
+            return builder(depth).build();
+        }
+
+        public static Config direct(int depth) {
+            return builder(depth).withDirectIO().build();
+        }
+
+        public static Builder builder(int depth) {
+            return new Builder(depth);
+        }
+
+        public static class Builder {
+            private final int depth;
+            private boolean directIO = false;
+            private boolean useIOPolling = false;
+            private boolean useSQPolling = false;
+
+            public Builder(int depth) {
+                if (depth <= 0) {
+                    throw new IllegalArgumentException("Depth must be positive");
+                }
+                this.depth = depth;
+            }
+
+            public Builder withDirectIO() {
+                this.directIO = true;
+                return this;
+            }
+
+            public Builder useDirectIO(boolean useDirectIO) {
+                this.directIO = useDirectIO;
+                return this;
+            }
+
+            public Builder withIOPolling() {
+                this.useIOPolling = true;
+                return this;
+            }
+
+            public Builder useIOPolling(boolean useIOPolling) {
+                this.useIOPolling = useIOPolling;
+                return this;
+            }
+
+            public Builder withSQPolling() {
+                this.useSQPolling = true;
+                return this;
+            }
+
+            public Builder useSQPolling(boolean useSQPolling) {
+                this.useSQPolling = useSQPolling;
+                return this;
+            }
+
+            private void validate() {
+                if (useIOPolling && !directIO) {
+                    throw new IllegalArgumentException("I/O polling can only be used with direct I/O");
+                }
+            }
+
+            public Config build() {
+                validate();
+                return new Config(depth, directIO, useSQPolling, useIOPolling);
+            }
+        }
+    }
+
 }
