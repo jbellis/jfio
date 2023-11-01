@@ -44,11 +44,10 @@ public class FileReader implements AutoCloseable {
      * @return a future on the result of the read.
      */
     public CompletableFuture<ByteBuffer> readAsync(long offset, int length) {
+        long byteAlignment = isDirect ? 512 : 1;
         long origOffset = offset;
         int origLength = length;
-        long byteAlignment = 1;
         if (isDirect) {
-            byteAlignment = 512;
             int offsetMod = (int) offset % 512;
             if (offsetMod != 0) {
                 offset -= offsetMod;
@@ -59,15 +58,55 @@ public class FileReader implements AutoCloseable {
                 length += 512 - lengthMod;
             }
         }
-        // We always align on 512; it's necessary for direct I/O, but it doesn't hurt for buffered I/O.
         MemorySegment segment = MemorySegment.allocateNative(length, byteAlignment, SegmentScope.auto());
+        return readAsync(offset, segment, segment.asByteBuffer(), origOffset, origLength);
+    }
+
+    /**
+     * Submits an asynchronous read request to the underlying {@link IOExecutor}.
+     * <p>
+     * If the underlying executor uses direct I/O, then the arguments to this method must respect a few constraints:
+     *  - the offset must be aligned on 512 bytes.
+     *  - the buffer must be a direct byte buffer aligned on 512 bytes, and it's length must also be a multiple of 512.
+     *
+     * @param offset the offset for the read.
+     * @param buffer the buffer to read into; length of the read will be that of the buffer remaining bytes.
+     * @return a future on the result of the read.
+     */
+    public CompletableFuture<ByteBuffer> readAsync(long offset, ByteBuffer buffer) {
+        MemorySegment segment = MemorySegment.ofBuffer(buffer);
+        if (isDirect) {
+            if (!buffer.isDirect()) {
+                throw new IllegalArgumentException("buffer must be direct as the executor uses direct I/O");
+            }
+            ensureDirectIOAlignment(offset, "offset");
+            ensureDirectIOAlignment(segment.address(), "the buffer starting address");
+            ensureDirectIOAlignment(segment.byteSize(), "the buffer length");
+        }
+        return readAsync(offset, segment, buffer, offset, buffer.remaining());
+    }
+
+    private void ensureDirectIOAlignment(long value, String name) {
+        if (value % 512 != 0) {
+            throw new IllegalArgumentException(name + " must be aligned on 512 bytes");
+        }
+    }
+
+    private CompletableFuture<ByteBuffer> readAsync(
+            long offset,
+            MemorySegment segment,
+            ByteBuffer result,
+            long origOffset,
+            int origLength
+    ) {
         AsyncReadSubmission submission = new AsyncReadSubmission(
                 fd,
-                length,
+                result.remaining(),
                 segment,
                 offset,
                 origOffset,
-                origLength
+                origLength,
+                result
         );
         executor.submit(submission);
         return submission.future;
@@ -84,10 +123,21 @@ public class FileReader implements AutoCloseable {
         private final long origOffset;
         private final int origLength;
 
-        protected AsyncReadSubmission(int fd, int length, MemorySegment buffer, long offset, long origOffset, int origLength) {
+        private final ByteBuffer result;
+
+        protected AsyncReadSubmission(
+                int fd,
+                int length,
+                MemorySegment buffer,
+                long offset,
+                long origOffset,
+                int origLength,
+                ByteBuffer result
+        ) {
             super(true, fd, length, buffer, offset);
             this.origOffset = origOffset;
             this.origLength = origLength;
+            this.result = result;
         }
 
         @Override
@@ -95,11 +145,10 @@ public class FileReader implements AutoCloseable {
             if (res < 0) {
                 future.completeExceptionally(new IOException("Read returned error " + -res));
             } else {
-                ByteBuffer byteBuffer = buffer.asByteBuffer();
                 int pos = (int) (origOffset - offset);
-                byteBuffer.position(pos);
-                byteBuffer.limit(pos + Math.min(origLength, res));
-                future.complete(byteBuffer);
+                result.position(pos);
+                result.limit(pos + Math.min(origLength, res));
+                future.complete(result);
             }
         }
     }

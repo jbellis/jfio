@@ -23,6 +23,7 @@
     <system>github</system>
     <url>http://github.com/pcmanus/jfio/issues</url>
   </issueManagement>
+
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -182,6 +183,33 @@
       </build>
     </profile>
 
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.6.0</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>aggregate-jar</goal>
+                </goals>
+                <configuration>
+                  <additionalJOptions>
+                    <additionalJOption>--enable-preview</additionalJOption>
+                  </additionalJOptions>
+                  <release>20</release>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
   <dependencies>
