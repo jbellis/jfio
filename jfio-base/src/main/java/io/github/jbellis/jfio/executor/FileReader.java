@@ -1,7 +1,7 @@
-package io.github.pcmanus.jfio.executor;
+package io.github.jbellis.jfio.executor;
 
-import io.github.pcmanus.jfio.NativeProvider;
-import io.github.pcmanus.jfio.Submission;
+import io.github.jbellis.jfio.NativeProvider;
+import io.github.jbellis.jfio.Submission;
 import net.jcip.annotations.ThreadSafe;
 
 import java.io.IOException;

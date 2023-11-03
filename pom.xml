@@ -4,25 +4,25 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>io.github.pcmanus</groupId>
+  <groupId>io.github.jbellis</groupId>
   <artifactId>jfio-parent</artifactId>
   <version>${revision}</version>
   <packaging>pom</packaging>
 
   <name>Jfio</name>
-  <url>https://github.com/pcmanus/jfio</url>
+  <url>https://github.com/jbellis/jfio</url>
 
   <description>Simple library for file I/O through linux io_uring</description>
   <scm child.scm.connection.inherit.append.path="false"
       child.scm.developerConnection.inherit.append.path="false"
       child.scm.url.inherit.append.path="false">
-    <connection>scm:git:git://github.com/pcmanus/jfio.git</connection>
-    <developerConnection>scm:git:git@github.com:pcmanus/jfio.git</developerConnection>
-    <url>http://github.com/pcmanus/jfio/tree/main/</url>
+    <connection>scm:git:git://github.com/jbellis/jfio.git</connection>
+    <developerConnection>scm:git:git@github.com:jbellis/jfio.git</developerConnection>
+    <url>http://github.com/jbellis/jfio/tree/main/</url>
   </scm>
   <issueManagement>
     <system>github</system>
-    <url>http://github.com/pcmanus/jfio/issues</url>
+    <url>http://github.com/jbellis/jfio/issues</url>
   </issueManagement>
 
   <licenses>
@@ -37,7 +37,7 @@
       <name>Sylvain Lebresne</name>
       <email>lebresne@gmail.com</email>
       <organization>Jfio</organization>
-      <organizationUrl>https://github.com/pcmanus/jfio</organizationUrl>
+      <organizationUrl>https://github.com/jbellis/jfio</organizationUrl>
     </developer>
   </developers>
 
@@ -112,6 +112,28 @@
         </executions>
       </plugin>
 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <phase>package</phase>
+            <goals>
+              <goal>aggregate-jar</goal>
+            </goals>
+            <configuration>
+              <!-- Nothing in jfio-native is really meant to be exposed -->
+              <!-- <skippedModules>jfio-native</skippedModules> -->
+              <additionalJOptions>
+                <additionalJOption>--enable-preview</additionalJOption>
+              </additionalJOptions>
+              <release>20</release>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 

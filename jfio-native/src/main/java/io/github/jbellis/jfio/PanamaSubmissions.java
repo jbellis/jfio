@@ -1,4 +1,4 @@
-package io.github.pcmanus.jfio;
+package io.github.jbellis.jfio;
 
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;

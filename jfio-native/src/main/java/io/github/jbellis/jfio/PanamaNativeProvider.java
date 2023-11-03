@@ -1,9 +1,16 @@
-package io.github.pcmanus.jfio;
+package io.github.jbellis.jfio;
 
 import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 
+/**
+ * Native provider for jfio using Panama Foreign Function and Memory API.
+ */
 public class PanamaNativeProvider extends NativeProvider {
+    /**
+     * Creates a new FFM-based native provider.
+     */
+    public PanamaNativeProvider() {}
 
     @Override
     public IORing createRing(IORing.Config config) {

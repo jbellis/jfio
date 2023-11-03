@@ -1,7 +1,7 @@
-package io.github.pcmanus.jfio.executor;
+package io.github.jbellis.jfio.executor;
 
-import io.github.pcmanus.jfio.IORing;
-import io.github.pcmanus.jfio.TestUtils;
+import io.github.jbellis.jfio.IORing;
+import io.github.jbellis.jfio.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

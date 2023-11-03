@@ -1,4 +1,4 @@
-package io.github.pcmanus.jfio;
+package io.github.jbellis.jfio;
 
 import net.jcip.annotations.NotThreadSafe;
 
@@ -25,10 +25,16 @@ public abstract class IORing implements AutoCloseable {
         this.config = config;
     }
 
+    /**
+     * Creates a new ring based on the provided config.
+     */
     public static IORing create(Config config) {
         return NativeProvider.instance().createRing(config);
     }
 
+    /**
+     * The configuration of this ring.
+     */
     public Config config() {
         return config;
     }
@@ -104,8 +110,20 @@ public abstract class IORing implements AutoCloseable {
         }
     }
 
+    /**
+     * Open the provided file and return the underlying "native" file descriptor.
+     *
+     * @param path the file to open.
+     * @param readOnly whether the file should be open in read only; if not, it is open in read-write.
+     * @return the file descriptor of the file.
+     *
+     * @throws IOException if the file cannot be open
+     */
     public abstract int openFile(Path path, boolean readOnly) throws IOException;
 
+    /**
+     * Closes the provided field descriptor (as obtained by {@link #openFile}.
+     */
     public abstract void closeFile(int fd) throws IOException;
 
     abstract Submissions submissions();

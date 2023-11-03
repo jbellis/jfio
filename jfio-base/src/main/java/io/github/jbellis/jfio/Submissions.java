@@ -1,4 +1,4 @@
-package io.github.pcmanus.jfio;
+package io.github.jbellis.jfio;
 
 abstract class Submissions {
     private final int maxInFlight;
