@@ -1,7 +1,7 @@
-package com.github.pcmanus.jfio.executor;
+package io.github.pcmanus.jfio.executor;
 
-import com.github.pcmanus.jfio.IORing;
-import com.github.pcmanus.jfio.Submission;
+import io.github.pcmanus.jfio.IORing;
+import io.github.pcmanus.jfio.Submission;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jctools.queues.MessagePassingQueue;

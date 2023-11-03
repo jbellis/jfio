@@ -1,5 +1,6 @@
-package com.github.pcmanus.jfio;
+package io.github.pcmanus.jfio;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -7,15 +8,13 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.github.pcmanus.jfio.TestUtils.TEST_FILE;
-import static com.github.pcmanus.jfio.TestUtils.bufferToString;
 import static org.junit.jupiter.api.Assertions.*;
 
 class IORingTest {
     @Test
     void canReadFileWithBufferedIO() throws InterruptedException, IOException {
         try (var ring = IORing.create(IORing.Config.buffered(2))) {
-            int fd = ring.openFile(TEST_FILE, true);
+            int fd = ring.openFile(TestUtils.TEST_FILE, true);
             ByteBuffer buffer = ByteBuffer.allocateDirect(7);
             AtomicBoolean done = new AtomicBoolean();
             ring.add(new Submission(true, fd, 7, buffer, 4) {
@@ -35,7 +34,7 @@ class IORingTest {
                 Thread.sleep(10);
             }
             assertTrue(done.get());
-            assertEquals("tre Cor", bufferToString(buffer));
+            Assertions.assertEquals("tre Cor", TestUtils.bufferToString(buffer));
             ring.closeFile(fd);
         }
     }
@@ -43,7 +42,7 @@ class IORingTest {
     @Test
     void canReadFileWithDirectIO() throws IOException, InterruptedException {
         try (var ring = IORing.create(IORing.Config.direct(2))) {
-            int fd = ring.openFile(TEST_FILE, true);
+            int fd = ring.openFile(TestUtils.TEST_FILE, true);
             // With direct IO, we ask for multiples of 512 bytes. So while at it, we get the whole thing.
             ByteBuffer buffer = NativeProvider.instance().allocateAligned(1024);
             AtomicBoolean done = new AtomicBoolean();
@@ -65,7 +64,7 @@ class IORingTest {
             }
             assertTrue(done.get());
             buffer.limit(699);
-            assertEquals(Files.readString(TEST_FILE), bufferToString(buffer));
+            Assertions.assertEquals(Files.readString(TestUtils.TEST_FILE), TestUtils.bufferToString(buffer));
             ring.closeFile(fd);
         }
     }

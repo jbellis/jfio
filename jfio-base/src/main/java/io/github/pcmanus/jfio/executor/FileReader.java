@@ -1,12 +1,11 @@
-package com.github.pcmanus.jfio.executor;
+package io.github.pcmanus.jfio.executor;
 
-import com.github.pcmanus.jfio.NativeProvider;
-import com.github.pcmanus.jfio.Submission;
+import io.github.pcmanus.jfio.NativeProvider;
+import io.github.pcmanus.jfio.Submission;
 import net.jcip.annotations.ThreadSafe;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 

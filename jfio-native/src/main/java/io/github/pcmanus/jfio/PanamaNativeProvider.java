@@ -1,9 +1,7 @@
-package com.github.pcmanus.jfio;
+package io.github.pcmanus.jfio;
 
 import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
-
-import static com.github.pcmanus.jfio.NativeUtils.ALLOCATOR;
 
 public class PanamaNativeProvider extends NativeProvider {
 
@@ -14,7 +12,7 @@ public class PanamaNativeProvider extends NativeProvider {
 
     @Override
     public ByteBuffer allocateAligned(int length) {
-        return ALLOCATOR.allocate(length, 512).asByteBuffer();
+        return NativeUtils.ALLOCATOR.allocate(length, 512).asByteBuffer();
     }
 
     @Override

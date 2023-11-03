@@ -1,4 +1,4 @@
-package com.github.pcmanus.jfio;
+package io.github.pcmanus.jfio;
 
 import java.nio.ByteBuffer;
 
@@ -18,7 +18,7 @@ public abstract class NativeProvider {
         final int runtimeVersion = Runtime.version().feature();
         if (runtimeVersion >= 20) {
             try {
-                return (NativeProvider) Class.forName("com.github.pcmanus.jfio.PanamaNativeProvider").getConstructor().newInstance();
+                return (NativeProvider) Class.forName("io.github.pcmanus.jfio.PanamaNativeProvider").getConstructor().newInstance();
             } catch (Throwable t) {
                 throw new RuntimeException("Unexpected error loading native library", t);
             }

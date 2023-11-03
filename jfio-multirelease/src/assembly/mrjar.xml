@@ -10,7 +10,7 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>com.github.pcmanus:jfio-base</include>
+                <include>io.github.pcmanus:jfio-base</include>
             </includes>
             <binaries>
                 <unpack>true</unpack>
@@ -20,7 +20,7 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>com.github.pcmanus:jfio-native</include>
+                <include>io.github.pcmanus:jfio-native</include>
             </includes>
             <binaries>
                 <outputDirectory>META-INF/versions/20</outputDirectory>

@@ -1,4 +1,4 @@
-package com.github.pcmanus.jfio;
+package io.github.pcmanus.jfio;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

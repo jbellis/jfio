@@ -1,4 +1,4 @@
-package com.github.pcmanus.jfio;
+package io.github.pcmanus.jfio;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;

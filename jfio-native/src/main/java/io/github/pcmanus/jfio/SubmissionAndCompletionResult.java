@@ -1,12 +1,10 @@
-package com.github.pcmanus.jfio;
+package io.github.pcmanus.jfio;
 
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.StructLayout;
 import java.lang.invoke.VarHandle;
 
-import static com.github.pcmanus.jfio.NativeUtils.ALLOCATOR;
-import static com.github.pcmanus.jfio.NativeUtils.POINTER;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
@@ -16,8 +14,8 @@ class SubmissionAndCompletionResult {
     SubmissionAndCompletionResult(int maxCompleted) {
         this.segment = Native.allocate();
 
-        Native.setCompletedRes(this.segment, ALLOCATOR.allocateArray(JAVA_INT, maxCompleted));
-        Native.setCompletedIds(this.segment, ALLOCATOR.allocateArray(JAVA_LONG, maxCompleted));
+        Native.setCompletedRes(this.segment, NativeUtils.ALLOCATOR.allocateArray(JAVA_INT, maxCompleted));
+        Native.setCompletedIds(this.segment, NativeUtils.ALLOCATOR.allocateArray(JAVA_LONG, maxCompleted));
     }
 
     int submitted() {
@@ -48,8 +46,8 @@ class SubmissionAndCompletionResult {
             LAYOUT = MemoryLayout.structLayout(
                     JAVA_INT.withName("nr_submitted"),
                     JAVA_INT.withName("nr_completed"),
-                    POINTER.withName("completed_res"),
-                    POINTER.withName("completed_ids")
+                    NativeUtils.POINTER.withName("completed_res"),
+                    NativeUtils.POINTER.withName("completed_ids")
             ).withName("submission_and_completion_result");
 
             nrSubmittedVH = LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("nr_submitted"));
@@ -83,7 +81,7 @@ class SubmissionAndCompletionResult {
         }
 
         static MemorySegment allocate() {
-            return ALLOCATOR.allocate(LAYOUT);
+            return NativeUtils.ALLOCATOR.allocate(LAYOUT);
         }
     }
 }

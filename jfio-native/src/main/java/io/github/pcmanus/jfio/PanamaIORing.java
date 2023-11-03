@@ -1,4 +1,4 @@
-package com.github.pcmanus.jfio;
+package io.github.pcmanus.jfio;
 
 import net.jcip.annotations.NotThreadSafe;
 
@@ -7,7 +7,7 @@ import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.nio.file.Path;
 
-import static com.github.pcmanus.jfio.NativeUtils.lookupNativeFunction;
+import static io.github.pcmanus.jfio.NativeUtils.lookupNativeFunction;
 import static java.lang.foreign.ValueLayout.*;
 
 /**

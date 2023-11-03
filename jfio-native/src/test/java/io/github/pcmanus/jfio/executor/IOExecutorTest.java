@@ -1,23 +1,20 @@
-package com.github.pcmanus.jfio.executor;
+package io.github.pcmanus.jfio.executor;
 
-import com.github.pcmanus.jfio.IORing;
+import io.github.pcmanus.jfio.IORing;
+import io.github.pcmanus.jfio.TestUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import static com.github.pcmanus.jfio.TestUtils.TEST_FILE;
-
-import static com.github.pcmanus.jfio.TestUtils.bufferToString;
-import static org.junit.jupiter.api.Assertions.*;
 
 class IOExecutorTest {
     private void canReadFile(int threadCount, IORing.Config config) throws Exception {
         try (var executor = IOExecutor.multiThreaded(threadCount, config);
-             var file = executor.openForReading(TEST_FILE)) {
+             var file = executor.openForReading(TestUtils.TEST_FILE)) {
 
             var first = file.readAsync(0, 15);
             var second = file.readAsync(49, 18);
 
-            assertEquals("Maître Corbeau", bufferToString(first.get()));
-            assertEquals("son bec un fromage", bufferToString(second.get()));
+            Assertions.assertEquals("Maître Corbeau", TestUtils.bufferToString(first.get()));
+            Assertions.assertEquals("son bec un fromage", TestUtils.bufferToString(second.get()));
         }
     }
 

@@ -1,12 +1,10 @@
-package com.github.pcmanus.jfio;
+package io.github.pcmanus.jfio;
 
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.StructLayout;
 import java.lang.invoke.VarHandle;
 
-import static com.github.pcmanus.jfio.NativeUtils.ALLOCATOR;
-import static com.github.pcmanus.jfio.NativeUtils.POINTER;
 import static java.lang.foreign.ValueLayout.*;
 
 class PanamaSubmissions extends Submissions {
@@ -21,7 +19,7 @@ class PanamaSubmissions extends Submissions {
     }
 
     @Override
-    void addSubmissionInternal(int index, long id, com.github.pcmanus.jfio.Submission submission) {
+    void addSubmissionInternal(int index, long id, Submission submission) {
         Native.set(this.segment, index, id, submission);
     }
 
@@ -52,7 +50,7 @@ class PanamaSubmissions extends Submissions {
                     JAVA_LONG.withName("id"),
                     JAVA_INT.withName("fd"),
                     JAVA_INT.withName("buf_length"),
-                    POINTER.withName("buf_base"),
+                    NativeUtils.POINTER.withName("buf_base"),
                     JAVA_LONG.withName("offset"),
                     JAVA_BOOLEAN.withName("is_read"),
                     MemoryLayout.paddingLayout(56)
@@ -83,7 +81,7 @@ class PanamaSubmissions extends Submissions {
         }
 
         static MemorySegment allocateArray(int size) {
-            return ALLOCATOR.allocateArray(LAYOUT, size);
+            return NativeUtils.ALLOCATOR.allocateArray(LAYOUT, size);
         }
     }
 }
