@@ -5,8 +5,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.github.pcmanus</groupId>
-  <artifactId>jfio</artifactId>
+  <artifactId>jfio-parent</artifactId>
   <version>${revision}</version>
+  <packaging>pom</packaging>
 
   <name>Jfio</name>
   <url>https://github.com/pcmanus/jfio</url>
@@ -42,8 +43,15 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.install.skip>true</maven.install.skip>
     <revision>0.1.0-SNAPSHOT</revision>
   </properties>
+
+  <modules>
+    <module>jfio-base</module>
+    <module>jfio-native</module>
+    <module>jfio-multirelease</module>
+  </modules>
 
   <build>
     <extensions>
@@ -59,12 +67,21 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.11.0</version>
         <configuration>
-          <source>20</source>
-          <target>20</target>
-          <compilerArgs>
-            <arg>--enable-preview</arg>
-          </compilerArgs>
+          <release>11</release>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.3.0</version>
+        <!-- We're creating a multirelease jar, but we don't want the "normal one" -->
+        <executions>
+          <execution>
+            <id>default-jar</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>
@@ -95,94 +112,10 @@
         </executions>
       </plugin>
 
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.3.0</version>
-        <configuration>
-          <classifier>${os.detected.classifier}</classifier>
-        </configuration>
-      </plugin>
-
     </plugins>
   </build>
 
   <profiles>
-    <profile>
-      <id>linux</id>
-      <activation>
-        <os>
-          <family>linux</family>
-        </os>
-      </activation>
-      <properties>
-        <native.make>make</native.make>
-        <native.compiler>gcc</native.compiler>
-        <native.linker>ld</native.linker>
-
-        <native.name>libjfio</native.name>
-        <native.source.directory>${project.basedir}/src/main/c</native.source.directory>
-        <native.build.directory>${project.build.directory}/native-lib</native.build.directory>
-        <native.lib.directory>${project.basedir}/src/main/resources/native-lib</native.lib.directory>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-clean-plugin</artifactId>
-            <version>3.3.2</version>
-            <configuration>
-              <filesets>
-                <fileset>
-                  <directory>${native.lib.directory}</directory>
-                </fileset>
-              </filesets>
-            </configuration>
-          </plugin>
-
-          <plugin>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>3.2.1</version>
-            <configuration>
-              <argLine>
-                --enable-preview
-                --enable-native-access=ALL-UNNAMED
-                -Djava.library.path=${native.lib.directory}
-              </argLine>
-            </configuration>
-          </plugin>
-
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
-            <version>3.1.0</version>
-            <executions>
-              <execution>
-                <id>build-native-lib</id>
-                <phase>generate-sources</phase>
-                <goals>
-                  <goal>exec</goal>
-                </goals>
-                <configuration>
-                  <executable>${native.make}</executable>
-                  <environmentVariables>
-                    <CC>${native.compiler}</CC>
-                    <LINKER>${native.linker}</LINKER>
-                    <SRC_DIR>${native.source.directory}</SRC_DIR>
-                    <LIB_DIR>${native.lib.directory}</LIB_DIR>
-                    <OBJ_DIR>${native.build.directory}</OBJ_DIR>
-                    <CFLAGS>-O3 -D_GNU_SOURCE -luring -march=native -Werror -Wno-attributes -fPIC -fno-omit-frame-pointer -Wunused-variable</CFLAGS>
-                    <LDFLAGS>-shared -luring</LDFLAGS>
-                    <LIB_NAME>${native.name}</LIB_NAME>
-                    <LIB_EXT>so</LIB_EXT>
-                  </environmentVariables>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-
-        </plugins>
-      </build>
-    </profile>
-
     <profile>
       <id>release</id>
       <build>
@@ -237,12 +170,6 @@
       <artifactId>jcip-annotations</artifactId>
       <version>1.0</version>
       <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jctools</groupId>
-      <artifactId>jctools-core</artifactId>
-      <version>4.0.1</version>
     </dependency>
   </dependencies>
 </project>

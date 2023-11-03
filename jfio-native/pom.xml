@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.github.pcmanus</groupId>
+    <artifactId>jfio-parent</artifactId>
+    <version>${revision}</version>
+  </parent>
+
+  <artifactId>jfio-native</artifactId>
+  <name>Jfio native</name>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <release>20</release>
+          <compilerArgs>
+            <arg>--enable-preview</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>linux</id>
+      <activation>
+        <os>
+          <family>linux</family>
+        </os>
+      </activation>
+      <properties>
+        <native.make>make</native.make>
+        <native.compiler>gcc</native.compiler>
+        <native.linker>ld</native.linker>
+
+        <native.name>libjfio</native.name>
+        <native.source.directory>${project.basedir}/src/main/c</native.source.directory>
+        <native.build.directory>${project.build.directory}/native-lib</native.build.directory>
+        <native.lib.directory>${project.basedir}/src/main/resources/native-lib</native.lib.directory>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-clean-plugin</artifactId>
+            <version>3.3.2</version>
+            <configuration>
+              <filesets>
+                <fileset>
+                  <directory>${native.lib.directory}</directory>
+                </fileset>
+              </filesets>
+            </configuration>
+          </plugin>
+
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.2.1</version>
+            <configuration>
+              <argLine>
+                --enable-preview
+                --enable-native-access=ALL-UNNAMED
+                -Djava.library.path=${native.lib.directory}
+              </argLine>
+            </configuration>
+          </plugin>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <id>build-native-lib</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <executable>${native.make}</executable>
+                  <environmentVariables>
+                    <CC>${native.compiler}</CC>
+                    <LINKER>${native.linker}</LINKER>
+                    <SRC_DIR>${native.source.directory}</SRC_DIR>
+                    <LIB_DIR>${native.lib.directory}</LIB_DIR>
+                    <OBJ_DIR>${native.build.directory}</OBJ_DIR>
+                    <CFLAGS>-O3 -D_GNU_SOURCE -luring -march=native -Werror -Wno-attributes -fPIC -fno-omit-frame-pointer -Wunused-variable</CFLAGS>
+                    <LDFLAGS>-shared -luring</LDFLAGS>
+                    <LIB_NAME>${native.name}</LIB_NAME>
+                    <LIB_EXT>so</LIB_EXT>
+                  </environmentVariables>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.github.pcmanus</groupId>
+      <artifactId>jfio-base</artifactId>
+      <version>${revision}</version>
+    </dependency>
+  </dependencies>
+</project>
