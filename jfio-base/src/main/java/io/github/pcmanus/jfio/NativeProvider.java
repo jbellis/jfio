@@ -20,15 +20,47 @@ public abstract class NativeProvider {
             try {
                 return (NativeProvider) Class.forName("io.github.pcmanus.jfio.PanamaNativeProvider").getConstructor().newInstance();
             } catch (Throwable t) {
-                throw new RuntimeException("Unexpected error loading native library", t);
+                return new UnavailableNativeLibraryProvider("Unexpected error loading native jfio library", t);
             }
         }
-        throw new RuntimeException("Cannot load native library: make sure you are running on java 20+");
+        return new UnavailableNativeLibraryProvider(
+                String.format("Native jfio library is only available on java 20+ (running %d)", runtimeVersion),
+                null
+        );
     }
 
     private static final class Holder {
         private Holder() {}
 
         static final NativeProvider INSTANCE = lookup();
+    }
+
+    private static class UnavailableNativeLibraryProvider extends NativeProvider {
+        private final String message;
+        private final Throwable cause;
+
+        private UnavailableNativeLibraryProvider(String message, Throwable cause) {
+            this.message = message;
+            this.cause = cause;
+        }
+
+        private <T> T doThrow() {
+            throw cause == null ? new UnavailableNativeLibrary(message) : new UnavailableNativeLibrary(message, cause);
+        }
+
+        @Override
+        public IORing createRing(IORing.Config config) {
+            return doThrow();
+        }
+
+        @Override
+        public ByteBuffer allocateAligned(int length) {
+            return doThrow();
+        }
+
+        @Override
+        public long address(ByteBuffer buffer) {
+            return doThrow();
+        }
     }
 }
