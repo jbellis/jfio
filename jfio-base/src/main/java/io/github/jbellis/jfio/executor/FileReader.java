@@ -9,6 +9,9 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Allows to read from a file asynchronously.
+ */
 @ThreadSafe
 public class FileReader implements AutoCloseable {
     private final Path path;
@@ -21,9 +24,14 @@ public class FileReader implements AutoCloseable {
         this.path = path;
         this.executor = executor;
         this.isDirect = executor.ringConfig().directIO();
-        this.fd = executor.openFile(path, true);
+        this.fd = executor.openFile(path);
     }
 
+    /**
+     * The path of the file this is a reader of.
+     *
+     * @return the file path.
+     */
     public Path path() {
         return path;
     }
@@ -119,16 +127,16 @@ public class FileReader implements AutoCloseable {
                 int origLength,
                 boolean isDirect
         ) {
-            super(true, fd, length, buffer, offset);
+            super(fd, length, buffer, offset);
             this.origOffset = origOffset;
             this.origLength = origLength;
             this.isDirect = isDirect;
         }
 
         private void checkDirectIOAlignments() {
-            checkDirectIOAlignment(offset, "offset");
-            checkDirectIOAlignment(NativeProvider.instance().address(buffer), "the buffer starting address");
-            checkDirectIOAlignment(buffer.remaining(), "the buffer length");
+            checkDirectIOAlignment(offset(), "offset");
+            checkDirectIOAlignment(NativeProvider.instance().address(buffer()), "the buffer starting address");
+            checkDirectIOAlignment(buffer().remaining(), "the buffer length");
         }
 
         private static void checkDirectIOAlignment(long value, String name) {
@@ -155,7 +163,8 @@ public class FileReader implements AutoCloseable {
                 }
                 future.completeExceptionally(new IOException("Read returned error %d" + errno));
             } else {
-                int pos = (int) (origOffset - offset);
+                ByteBuffer buffer = buffer();
+                int pos = (int) (origOffset - offset());
                 buffer.position(pos);
                 buffer.limit(pos + Math.min(origLength, res));
                 future.complete(buffer);

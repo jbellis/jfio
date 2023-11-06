@@ -52,7 +52,7 @@ abstract class Submissions {
             return false;
         }
 
-        long id = assignId(submission);
+        int id = assignId(submission);
         addSubmissionInternal(this.pending++, id, submission);
         return true;
     }
@@ -82,9 +82,9 @@ abstract class Submissions {
         inFlightOrPending[id] = null;
     }
 
-    abstract void addSubmissionInternal(int index, long id, Submission submission);
+    abstract void addSubmissionInternal(int index, int id, Submission submission);
     abstract void move(int from, int to);
-    abstract long idOfSubmission(int index);
+    abstract int idOfSubmission(int index);
 
     @Override
     public String toString() {
@@ -98,7 +98,7 @@ abstract class Submissions {
             if (i > 0) {
                 sb.append("\n");
             }
-            int id = (int) idOfSubmission(i);
+            int id = idOfSubmission(i);
             sb.append("  ").append(id).append(": ").append(inFlightOrPending[id]);
         }
         sb.append("\n]");

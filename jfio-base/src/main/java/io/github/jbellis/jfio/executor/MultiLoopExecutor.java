@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MultiLoopExecutor extends IOExecutor {
+class MultiLoopExecutor extends IOExecutor {
     private final EventLoop[] loops;
     private final AtomicInteger idx = new AtomicInteger(0);
 
@@ -31,8 +31,8 @@ public class MultiLoopExecutor extends IOExecutor {
     }
 
     @Override
-    int openFile(Path path, boolean readonly) throws IOException {
-        return next().openFile(path, readonly);
+    int openFile(Path path) throws IOException {
+        return next().openFile(path);
     }
 
     @Override

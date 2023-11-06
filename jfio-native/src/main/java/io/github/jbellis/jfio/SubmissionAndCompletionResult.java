@@ -15,7 +15,7 @@ class SubmissionAndCompletionResult {
         this.segment = Native.allocate();
 
         Native.setCompletedRes(this.segment, NativeUtils.ALLOCATOR.allocateArray(JAVA_INT, maxCompleted));
-        Native.setCompletedIds(this.segment, NativeUtils.ALLOCATOR.allocateArray(JAVA_LONG, maxCompleted));
+        Native.setCompletedIds(this.segment, NativeUtils.ALLOCATOR.allocateArray(JAVA_INT, maxCompleted));
     }
 
     int submitted() {
@@ -31,7 +31,7 @@ class SubmissionAndCompletionResult {
     }
 
     int id(int i) {
-        return (int) Native.completedIds(this.segment, i);
+        return Native.completedIds(this.segment, i);
     }
 
     static class Native {
@@ -76,8 +76,8 @@ class SubmissionAndCompletionResult {
             completedIdsVH.set(seg, idsBuffer);
         }
 
-        static long completedIds(MemorySegment seg, int i) {
-            return ((MemorySegment) completedIdsVH.get(seg)).getAtIndex(JAVA_LONG, i);
+        static int completedIds(MemorySegment seg, int i) {
+            return ((MemorySegment) completedIdsVH.get(seg)).getAtIndex(JAVA_INT, i);
         }
 
         static MemorySegment allocate() {

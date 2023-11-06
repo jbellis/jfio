@@ -14,14 +14,13 @@
 #include <sys/uio.h>
 #include <liburing.h>
 
-// A submission for the `submit_and_check_completions` function.
+// A submission for the `submit_and_check_completions` function. Only supports reads at present.
 struct submission {
-    long id;        // Id of the submission (how we'll identify when this submission completes).
-    int fd;         // File descriptor on which the read/write operates
-    int buf_length; // Length of the buffer to read/write from/to.
-    void* buf_base; // Base address of the buffer to read/write from/to.
-    long offset;    // Offset in the file at which to read/write.
-    bool is_read;   // Where the submission is a read or a write.
+    int id;         // Id of the submission (how we'll identify when this submission completes).
+    int fd;         // File descriptor on which the read operates
+    int buf_length; // Length of the buffer to read into.
+    void* buf_base; // Base address of the buffer to read to.
+    long offset;    // Offset in the file at which to read.
 };
 
 // Stores the result of a `submit_and_check_completions` call.
@@ -31,7 +30,7 @@ struct submission_and_completion_result {
     // Note that the `submit_and_check_completions function _assumes_ that the follow arrays are large enough to store
     // entries for all the completions found (tl;dr, those array should have size `depth * 2`).
     int* completed_res;  // results of the completions found.
-    long* completed_ids; // ids of the completions found.
+    int* completed_ids; // ids of the completions found.
 };
 
 /*
@@ -56,11 +55,12 @@ extern void destroy_ring(struct io_uring* ring);
 /*
  * Submit an "openat" request to the provided ring for the provided file, and wait on it's completion (returning the
  * resulting fd (or error). The `direct` flag allows the file to be opened with O_DIRECT (and this is the main
- * reason for this to exists: we can open a file from Java, but not with O_DIRECT).
+ * reason for this to exists: we can open a file from Java, but not with O_DIRECT). This currently only ever
+ * open the file in read-only mode.
  *
  * This function assumes that the ring is _empty_ when this is called.
  */
-extern int open_file(struct io_uring* ring, const char* path, bool readOnly, bool direct);
+extern int open_file(struct io_uring* ring, const char* path, bool direct);
 
 /*
  * Closes a file opened with `open_file` (this is also a synchronous operation which waits on the completion).

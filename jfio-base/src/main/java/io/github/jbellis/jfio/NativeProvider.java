@@ -3,9 +3,12 @@ package io.github.jbellis.jfio;
 import java.nio.ByteBuffer;
 
 /**
- * Provide access to some native operations.
+ * Provide accesses to some native operations.
  */
 public abstract class NativeProvider {
+    /**
+     * Creates a new native provider.
+     */
     protected NativeProvider() {}
 
     /**

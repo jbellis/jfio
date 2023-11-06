@@ -19,7 +19,7 @@ class PanamaSubmissions extends Submissions {
     }
 
     @Override
-    void addSubmissionInternal(int index, long id, Submission submission) {
+    void addSubmissionInternal(int index, int id, Submission submission) {
         Native.set(this.segment, index, id, submission);
     }
 
@@ -31,7 +31,7 @@ class PanamaSubmissions extends Submissions {
     }
 
     @Override
-    long idOfSubmission(int index) {
+    int idOfSubmission(int index) {
         return Native.getId(this.segment, index);
     }
 
@@ -43,17 +43,15 @@ class PanamaSubmissions extends Submissions {
         private static final VarHandle bufLengthVH;
         private static final VarHandle bufBaseVH;
         private static final VarHandle offsetVH;
-        private static final VarHandle isReadVH;
 
         static {
             LAYOUT = MemoryLayout.structLayout(
-                    JAVA_LONG.withName("id"),
+                    JAVA_INT.withName("id"),
                     JAVA_INT.withName("fd"),
                     JAVA_INT.withName("buf_length"),
+                    MemoryLayout.paddingLayout(32),
                     NativeUtils.POINTER.withName("buf_base"),
-                    JAVA_LONG.withName("offset"),
-                    JAVA_BOOLEAN.withName("is_read"),
-                    MemoryLayout.paddingLayout(56)
+                    JAVA_LONG.withName("offset")
             ).withName("submission");
 
 
@@ -62,10 +60,9 @@ class PanamaSubmissions extends Submissions {
             bufLengthVH = LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("buf_length"));
             bufBaseVH = LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("buf_base"));
             offsetVH = LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("offset"));
-            isReadVH = LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("is_read"));
         }
 
-        static void set(MemorySegment segment, int index, long id, Submission submission) {
+        static void set(MemorySegment segment, int index, int id, Submission submission) {
             MemorySegment toSet = segment.asSlice(index * LAYOUT.byteSize());
 
             idVH.set(toSet, id);
@@ -73,11 +70,10 @@ class PanamaSubmissions extends Submissions {
             bufLengthVH.set(toSet, submission.length());
             bufBaseVH.set(toSet, MemorySegment.ofBuffer(submission.buffer()));
             offsetVH.set(toSet, submission.offset());
-            isReadVH.set(toSet, submission.isRead());
         }
 
-        static long getId(MemorySegment segment, int index) {
-            return (long) idVH.get(segment.asSlice(index * LAYOUT.byteSize()));
+        static int getId(MemorySegment segment, int index) {
+            return (int) idVH.get(segment.asSlice(index * LAYOUT.byteSize()));
         }
 
         static MemorySegment allocateArray(int size) {

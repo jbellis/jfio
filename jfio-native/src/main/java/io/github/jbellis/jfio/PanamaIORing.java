@@ -52,7 +52,6 @@ class PanamaIORing extends IORing {
                 JAVA_INT,
                 POINTER,
                 POINTER,
-                JAVA_BOOLEAN,
                 JAVA_BOOLEAN
         );
         openFileMH = lookupNativeFunction("open_file", openFileDesc);
@@ -133,12 +132,12 @@ class PanamaIORing extends IORing {
     }
 
     @Override
-    public int openFile(Path path, boolean readOnly) throws IOException {
+    public int openFile(Path path) throws IOException {
         String absolutePath = path.toAbsolutePath().toString();
         int length = absolutePath.length();
         MemorySegment segment = NativeUtils.ALLOCATOR.allocate(length + 1);
         segment.setUtf8String(0, absolutePath);
-        int fd = openFileInternal(segment, readOnly);
+        int fd = openFileInternal(segment);
         if (fd < 0) {
             int errno = -fd;
             if (errno == NativeUtils.EIO_ERRNO) {
@@ -150,9 +149,9 @@ class PanamaIORing extends IORing {
         return fd;
     }
 
-    private int openFileInternal(MemorySegment filePathAsSegment, boolean readOnly) {
+    private int openFileInternal(MemorySegment filePathAsSegment) {
         try {
-            return (int) openFileMH.invoke(fileOperationsRing, filePathAsSegment, readOnly, config.directIO());
+            return (int) openFileMH.invoke(fileOperationsRing, filePathAsSegment, config.directIO());
         } catch (Throwable e) {
             throw new RuntimeException("Error invoking native method", e);
         }

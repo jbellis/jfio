@@ -54,9 +54,9 @@ class EventLoop extends IOExecutor {
     }
 
     @Override
-    int openFile(Path path, boolean readonly) throws IOException {
+    int openFile(Path path) throws IOException {
         try {
-            return fileOperationsExecutor.submit(() -> ring.openFile(path, true)).get();
+            return fileOperationsExecutor.submit(() -> ring.openFile(path)).get();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (ExecutionException e) {

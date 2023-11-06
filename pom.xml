@@ -75,13 +75,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.3.0</version>
-        <!-- We're creating a multirelease jar, but we don't want the "normal one" -->
-        <executions>
-          <execution>
-            <id>default-jar</id>
-            <phase>none</phase>
-          </execution>
-        </executions>
       </plugin>
 
       <plugin>
@@ -124,8 +117,6 @@
               <goal>aggregate-jar</goal>
             </goals>
             <configuration>
-              <!-- Nothing in jfio-native is really meant to be exposed -->
-              <!-- <skippedModules>jfio-native</skippedModules> -->
               <additionalJOptions>
                 <additionalJOption>--enable-preview</additionalJOption>
               </additionalJOptions>
@@ -136,36 +127,6 @@
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>release</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.6.0</version>
-            <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>aggregate-jar</goal>
-                </goals>
-                <configuration>
-                  <additionalJOptions>
-                    <additionalJOption>--enable-preview</additionalJOption>
-                  </additionalJOptions>
-                  <release>20</release>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
   <dependencies>
     <dependency>

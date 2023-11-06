@@ -14,10 +14,10 @@ class IORingTest {
     @Test
     void canReadFileWithBufferedIO() throws InterruptedException, IOException {
         try (var ring = IORing.create(IORing.Config.buffered(2))) {
-            int fd = ring.openFile(TestUtils.TEST_FILE, true);
+            int fd = ring.openFile(TestUtils.TEST_FILE);
             ByteBuffer buffer = ByteBuffer.allocateDirect(7);
             AtomicBoolean done = new AtomicBoolean();
-            ring.add(new Submission(true, fd, 7, buffer, 4) {
+            ring.add(new Submission(fd, 7, buffer, 4) {
                 @Override
                 public void onCompletion(int res) {
                     assertEquals(7, res);
@@ -42,11 +42,11 @@ class IORingTest {
     @Test
     void canReadFileWithDirectIO() throws IOException, InterruptedException {
         try (var ring = IORing.create(IORing.Config.direct(2))) {
-            int fd = ring.openFile(TestUtils.TEST_FILE, true);
+            int fd = ring.openFile(TestUtils.TEST_FILE);
             // With direct IO, we ask for multiples of 512 bytes. So while at it, we get the whole thing.
             ByteBuffer buffer = NativeProvider.instance().allocateAligned(1024);
             AtomicBoolean done = new AtomicBoolean();
-            ring.add(new Submission(true,  fd, 1024, buffer, 0) {
+            ring.add(new Submission(fd, 1024, buffer, 0) {
                 @Override
                 public void onCompletion(int res) {
                     assertEquals(699, res);
